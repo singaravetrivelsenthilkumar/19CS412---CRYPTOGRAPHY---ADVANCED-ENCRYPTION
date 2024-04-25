@@ -1,4 +1,4 @@
- ## IMPLEMENTATION OF RSA
+## IMPLEMENTATION OF RSA
  # AIM :
  To write a C program to implement the RSA encryption algorithm.
 
@@ -84,7 +84,8 @@ return 0;
 }
 ```
 ## OUTPUT:
-![Screenshot 2024-03-05 113517](https://github.com/AlluguriSrikrishnateja/19CS412---CRYPTOGRAPHY---ADVANCED-ENCRYPTION/assets/118343892/b96f8704-db74-4fb0-835d-078d58644625)
+
+![Screenshot 2024-03-15 221959](https://github.com/AntonyJohnKennady/19CS412---CRYPTOGRAPHY---ADVANCED-ENCRYPTION/assets/127506261/09a0a56c-338e-4229-88ef-c90ef8e4e112)
 
 
 ## RESULT :
@@ -92,83 +93,7 @@ return 0;
 Thus the C program to implement RSA encryption technique had been
 implemented successfully
 
-## IMPLEMENTATION OF AES
-## AIM:
-To use Advanced Encryption Standard (AES) Algorithm for a practical
-application like URL Encryption.
-## ALGORITHM:
-1. AES is based on a design principle known as a substitution–permutation.
-2. AES does not use a Feistel network like DES, it uses variant of Rijndael.
-3. It has a fixed block size of 128 bits, and a key size of 128, 192, or 256 bits.
-4. AES operates on a 4 × 4 column-major order array of bytes, termed the state
-## PROGRAM:
-## AES.java
-import java.io.UnsupportedEncodingException;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
-import java.util.Base64;
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-public class AES {
- private static SecretKeySpec secretKey;
- private static byte[] key;
- public static void setKey(String myKey) {
- MessageDigest sha = null;
- try {
- key = myKey.getBytes("UTF-8");
- sha = MessageDigest.getInstance("SHA-1");
- key = sha.digest(key);
- key = Arrays.copyOf(key, 16);
- secretKey = new SecretKeySpec(key, "AES");
- } catch (NoSuchAlgorithmException e) {
- e.printStackTrace();
- } catch (UnsupportedEncodingException e) {
- e.printStackTrace();
- }
- }
- public static String encrypt(String strToEncrypt, String secret) {
- try {
- setKey(secret);
- Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
- cipher.init(Cipher.ENCRYPT_MODE, secretKey);
- return
-Base64.getEncoder().encodeToString(cipher.doFinal(strToEncrypt.getBytes("UTF-8")));
- } catch (Exception e) {
- System.out.println("Error while encrypting: " + e.toString());
- }
- return null;
- }
- public static String decrypt(String strToDecrypt, String secret) {
- try {
- setKey(secret);
- Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
- cipher.init(Cipher.DECRYPT_MODE, secretKey);
- return new String(cipher.doFinal(Base64.getDecoder().decode(strToDecrypt)));
- } catch (Exception e) {
- System.out.println("Error while decrypting: " + e.toString());
- }
- return null;
- }
- public static void main(String[] args) {
- final String secretKey = "annaUniversity";
- String originalString = "www.annauniv.edu";
- String encryptedString = AES.encrypt(originalString, secretKey);
- String decryptedString = AES.decrypt(encryptedString, secretKey);
- System.out.println("URL Encryption Using AES Algorithm\n------------");
- System.out.println("Original URL : " + originalString);
- System.out.println("Encrypted URL : " + encryptedString);
- System.out.println("Decrypted URL : " + decryptedString);
- }
-}
-   ## OUTPUT:
-URL Encryption Using AES Algorithm
--------------------------------------------------
-Original URL : www.annauniv.edu
-Encrypted URL : vibpFJW6Cvs5Y+L7t4N6YWWe07+JzS1d3CU2h3mEvEg=
-Decrypted URL : www.annauniv.edu
 
-## RESULT:
 
 
 
@@ -242,7 +167,7 @@ return 0;
 ```
 ## OUTPUT:
 
-<img width="342" alt="image" src="https://github.com/AlluguriSrikrishnateja/19CS412---CRYPTOGRAPHY---ADVANCED-ENCRYPTION/assets/118343892/a3f5b0fa-ef81-4215-9521-2a16c87cef68">
+![Screenshot 2024-03-15 222122](https://github.com/AntonyJohnKennady/19CS412---CRYPTOGRAPHY---ADVANCED-ENCRYPTION/assets/127506261/c2102468-0262-4218-860e-387d3bf79326)
 
 
 ## RESULT: 
@@ -276,21 +201,123 @@ same process for the remaining plain text characters.
 ### PROGRAM :
 
 ```
-from cryptography.fernet import Fernet
-message = input()
-key = Fernet.generate_key()
-fernet = Fernet(key)
-encMessage = fernet.encrypt(message.encode())
-print("original string: ", message)
-print("encrypted string: ", encMessage)
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
-decMessage = fernet.decrypt(encMessage).decode()
- 
-print("decrypted string: ", decMessage)
+typedef unsigned char DES_cblock[8];
+
+// Permutation tables for DES
+static const unsigned char IP[] = { 2, 6, 3, 1, 4, 8, 5, 7 };
+static const unsigned char E[] = { 4, 1, 2, 3, 2, 3, 4, 1 };
+static const unsigned char P[] = { 2, 4, 3, 1 };
+static const unsigned char IP_INV[] = { 4, 1, 3, 5, 7, 2, 8, 6 };
+
+// Initial and final permutation
+void permutation(const unsigned char* in, unsigned char* out, const unsigned char* perm, int size) {
+    for (int i = 0; i < size; i++) {
+        int bit = (in[perm[i] - 1] >> 7) & 1;
+        out[i] = (out[i] << 1) | bit;
+    }
+}
+
+// Expand and permute R
+void expandPermute(const unsigned char* R, unsigned char* expandedR) {
+    permutation(R, expandedR, E, 8);
+}
+
+// XOR operation
+void XOR(const unsigned char* a, const unsigned char* b, unsigned char* result, int size) {
+    for (int i = 0; i < size; i++) {
+        result[i] = a[i] ^ b[i];
+    }
+}
+
+// S-Box substitution
+void substitution(const unsigned char* input, unsigned char* output) {
+    static const unsigned char S[8][4][16] = { /* ... S-Box values ... */ };
+    // Implement S-Box substitution here
+}
+
+// Permute using P
+void permute(const unsigned char* input, unsigned char* output) {
+    permutation(input, output, P, 4);
+}
+
+// Initial permutation and final permutation
+void initialPermutation(const unsigned char* in, unsigned char* out) {
+    permutation(in, out, IP, 8);
+}
+
+void finalPermutation(const unsigned char* in, unsigned char* out) {
+    permutation(in, out, IP_INV, 8);
+}
+
+// DES encryption for one round
+void desRound(const unsigned char* L, const unsigned char* R, unsigned char* newL, unsigned char* newR, const unsigned char* subkey) {
+    unsigned char expandedR[6];
+    unsigned char xorResult[6];
+    unsigned char substitutedR[4];
+    unsigned char permutedR[4];
+
+    expandPermute(R, expandedR);
+    XOR(expandedR, subkey, xorResult, 6);
+    substitution(xorResult, substitutedR);
+    permute(substitutedR, permutedR);
+    XOR(L, permutedR, newL, 4);
+    memcpy(newR, R, 4);
+}
+
+// Generate DES subkeys
+void generateSubKeys(const unsigned char* key, unsigned char subkeys[16][6]) {
+    // Implement subkey generation here
+}
+
+// DES encryption
+void desEncrypt(const unsigned char* plaintext, const unsigned char subkeys[16][6], unsigned char* ciphertext) {
+    unsigned char L[4], R[4], newL[4], newR[4];
+    unsigned char IPresult[8], finalIPresult[8];
+
+    initialPermutation(plaintext, IPresult);
+    memcpy(L, IPresult, 4);
+    memcpy(R, IPresult + 4, 4);
+
+    for (int round = 0; round < 16; round++) {
+        desRound(L, R, newL, newR, subkeys[round]);
+        memcpy(L, newL, 4);
+        memcpy(R, newR, 4);
+    }
+
+    memcpy(finalIPresult, R, 4);
+    memcpy(finalIPresult + 4, L, 4);
+    finalPermutation(finalIPresult, ciphertext);
+}
+
+int main() {
+    // Input key and plaintext (8 characters each)
+    const char* key = "#4>";
+    const char* plaintext = "john";
+
+    unsigned char subkeys[16][6];
+    generateSubKeys((const unsigned char*)key, subkeys);
+
+    unsigned char ciphertext[8];
+    desEncrypt((const unsigned char*)plaintext, subkeys, ciphertext);
+
+    printf("Plaintext: %s\n", plaintext);
+    printf("Ciphertext: ");
+    for (int i = 0; i < 8; i++) {
+        printf("%02X ", ciphertext[i]);
+    }
+    printf("\n");
+
+    return 0;
+}
 ```
 ## OUTPUT:
+![image](https://github.com/singaravetrivelsenthilkumar/19CS412---CRYPTOGRAPHY---ADVANCED-ENCRYPTION/assets/120572270/a8914310-199e-42d9-9e91-5a99e7d38702)
 
-<img width="756" alt="image" src="https://github.com/AlluguriSrikrishnateja/19CS412---CRYPTOGRAPHY---ADVANCED-ENCRYPTION/assets/118343892/23e74c08-7cea-4381-b9fe-97e247b17470">
+
 
 ## RESULT:
 
